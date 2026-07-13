@@ -17,7 +17,7 @@ spec:
       containers:
       - name: nodejs-rest-api
         # Replace <YOUR_DOCKERHUB_USERNAME> with your actual DockerHub username
-        image: amalph10/nodejs-api:latest
+        image: amalph10/nodejs-api:1
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
