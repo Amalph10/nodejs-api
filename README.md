@@ -124,95 +124,10 @@ Before installing the Kubernetes cluster, secure your Ubuntu server (EC2 instanc
 
 ## 4. Self-Hosted Kubernetes Setup (using kubeadm)
 
-Follow these steps to set up a Kubernetes cluster on your self-managed Ubuntu server. These setup instructions are based on the [BashOps Kubernetes Installation Guide](https://github.com/BashOps/kubernetes_install/blob/main/kubeadm/README.md):
+The self-hosted Kubernetes cluster was set up on the Ubuntu VM following the instructions from this repository:
+* **Installation Guide**: [BashOps Kubernetes Installation Guide](https://github.com/BashOps/kubernetes_install/blob/main/kubeadm/README.md)
 
-### A. Pre-requisites (Run on all nodes)
-Run the following commands as root or using `sudo` to configure system prerequisites:
-
-```bash
-# Disable Swap (required by Kubernetes)
-sudo swapoff -a
-sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
-
-# Forward IPv4 and let iptables see bridged traffic
-cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
-overlay
-br_netfilter
-EOF
-
-sudo modprobe overlay
-sudo modprobe br_netfilter
-
-cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-iptables  = 1
-net.bridge.bridge-nf-call-ip6tables = 1
-net.ipv4.ip_forward                 = 1
-EOF
-
-sudo sysctl --system
-```
-
-### B. Install Container Runtime (containerd)
-```bash
-# Install containerd
-sudo apt-get update
-sudo apt-get install -y containerd
-
-# Create default containerd config
-sudo mkdir -p /etc/containerd
-containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
-
-# Enable SystemdCgroup in containerd config
-sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
-
-# Restart containerd
-sudo systemctl restart containerd
-sudo systemctl enable containerd
-```
-
-### C. Install kubeadm, kubelet, and kubectl
-```bash
-sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gpg
-
-# Download the public signing key for the Kubernetes package repositories
-sudo mkdir -p -m 755 /etc/apt/keyrings
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-
-# Add the appropriate Kubernetes apt repository
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
-
-# Update package index and install packages
-sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl
-sudo apt-mark hold kubelet kubeadm kubectl
-```
-
-### D. Initialize Control Plane (Run ONLY on Master node)
-```bash
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16
-```
-Upon success, configure standard kubeconfig for your non-root user (e.g. `ubuntu`):
-```bash
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-```
-
-### E. Install Pod Network Add-on (CNI)
-Install Calico network plugin:
-```bash
-kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
-kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/custom-resources.yaml
-```
-
-### F. Allow Scheduling on Single-Node Cluster (Optional)
-If you are running a single-node cluster (e.g. testing on one VM), untaint the node to schedule application pods:
-```bash
-kubectl taint nodes --all node-role.kubernetes.io/control-plane-
-```
-
-### G. Verify Cluster Status
-Check if the control plane node is ready:
+Verify the cluster setup was successful using:
 ```bash
 kubectl get nodes
 ```
