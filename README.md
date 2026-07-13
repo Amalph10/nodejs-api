@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Node.js REST API & Kubernetes Deployment Guide
 
 This repository contains a simple, production-ready Node.js REST API, containerized using Docker, and ready for deployment on a self-hosted Kubernetes cluster (e.g., set up via `kubeadm` on Ubuntu).
@@ -125,7 +124,7 @@ Before installing the Kubernetes cluster, secure your Ubuntu server (EC2 instanc
 
 ## 4. Self-Hosted Kubernetes Setup (using kubeadm)
 
-Follow these steps to set up a Kubernetes cluster on your self-managed Ubuntu server:
+Follow these steps to set up a Kubernetes cluster on your self-managed Ubuntu server. These setup instructions are based on the [BashOps Kubernetes Installation Guide](https://github.com/BashOps/kubernetes_install/blob/main/kubeadm/README.md):
 
 ### A. Pre-requisites (Run on all nodes)
 Run the following commands as root or using `sudo` to configure system prerequisites:
