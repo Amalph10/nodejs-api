@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-rest-api
+  labels:
+    app: nodejs-rest-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nodejs-rest-api
+  template:
+    metadata:
+      labels:
+        app: nodejs-rest-api
+    spec:
+      containers:
+      - name: nodejs-rest-api
+        # Replace <YOUR_DOCKERHUB_USERNAME> with your actual DockerHub username
+        image: <YOUR_DOCKERHUB_USERNAME>/nodejs-rest-api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
