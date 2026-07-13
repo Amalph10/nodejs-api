@@ -281,6 +281,36 @@ Please run the following commands on your cluster to capture the required screen
    curl http://<YOUR_VM_IP>:30001/
    ```
    *Take a screenshot showing the returned JSON response containing the message, server uptime, and container hostname.*
-=======
-# nodejs-api
->>>>>>> fa56eeda323305b0b99127de5f59bb2cb2942084
+
+---
+
+## 8. Troubleshooting & Resolutions (Interview Log)
+
+Here is a log of the real-world cluster issues encountered during this setup and how they were systematically resolved:
+
+### Issue 1: GitHub Remote Push Denied (403 Forbidden)
+* **Symptom**: `remote: Permission to Amalph10/nodejs-api.git denied to Abhilashph123.`
+* **Cause**: The local Git configuration was caching credentials of another user (`Abhilashph123`) in the Windows Credential Manager.
+* **Resolution**: 
+  1. Updated the Git remote origin to include the correct account username:
+     ```bash
+     git remote set-url origin https://Amalph10@github.com/Amalph10/nodejs-api.git
+     ```
+  2. Soft-reset the git commits to clear the author history and recommitted the files under the correct Git identity (`Amalph10`), ensuring clean attribution.
+
+### Issue 2: Kubernetes Pods stuck in `ImagePullBackOff`
+* **Symptom**: Pod status showed `ImagePullBackOff` or `ErrImagePull`.
+* **Cause**: The deployment manifest specified `amalph10/nodejs-api:latest`, but the Docker image was pushed to Docker Hub with the tag `1` (i.e. `amalph10/nodejs-api:1`).
+* **Resolution**: Updated `k8s/deployment.yaml` to target the exact tag `amalph10/nodejs-api:1`, and pulled the updated code to the master node before re-deploying.
+
+### Issue 3: Master Node unable to fetch logs (`dial tcp 10250: i/o timeout`)
+* **Symptom**: `kubectl logs` failed with `dial tcp 172.31.42.98:10250: i/o timeout`.
+* **Cause**: The master node could not communicate with the worker node's `kubelet` API port (`10250`) due to local UFW rules or AWS Security Group constraints blocking node-to-node communication.
+* **Resolution**: Disabled the local firewall (`sudo ufw disable`) on both the master and worker nodes, and ensured the AWS Security Group allows all internal subnet traffic.
+
+### Issue 4: Localhost NodePort `30001` Timeout on Master Node
+* **Symptom**: `curl http://localhost:30001/` returned a connection timeout.
+* **Cause**: In multi-node clusters, the master node does not host application pods and lacks appropriate internal CNI routing paths if overlay network ports (VXLAN/UDP `4789`) are blocked in the cloud firewall.
+* **Resolution**: Verified routing by querying the Worker Node private IP directly (`curl http://172.31.42.98:30001/`), which returned a successful JSON response. For public access, the Worker Node's Public IP is used on port `30001` with the respective security group port opened.
+
+
